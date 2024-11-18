@@ -1,7 +1,18 @@
-import { ParseMongoIdPipe } from './parse-mongo-id.pipe';
+import {
+  ArgumentMetadata,
+  BadRequestException,
+  Injectable,
+  PipeTransform,
+} from '@nestjs/common';
+import { isValidObjectId } from 'mongoose';
 
-describe('ParseMongoIdPipe', () => {
-  it('should be defined', () => {
-    expect(new ParseMongoIdPipe()).toBeDefined();
-  });
-});
+@Injectable()
+export class ParseMongoId implements PipeTransform {
+  transform(value: any, metadata: ArgumentMetadata) {
+    if (isValidObjectId(value)) {
+      throw new BadRequestException(`${value} is not a valid MongoId`);
+    }
+
+    return value;
+  }
+}
