@@ -1,0 +1,18 @@
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# editorconfig.org
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{js,ts,html}]
+charset = utf-8
+indent_style = space
+
+[*.{js,ts}]
+trim_trailing_whitespace = true
+indent_size = 2
+
