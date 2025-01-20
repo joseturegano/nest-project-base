@@ -1,6 +1,33 @@
-dist/
-node_modules/
-mongo/
+# Ignorar node_modules
+node_modules
 
-.git/
-.gitignore/
+# Ignorar archivos de desarrollo
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Ignorar logs y archivos temporales
+logs
+tmp
+
+# Ignorar archivos de configuración local
+.vscode
+.idea
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de test
+coverage
+*.log
+
+# Ignorar archivos de build
+dist
+build
+
+# Ignorar archivos de versionado
+.git
+.gitignore

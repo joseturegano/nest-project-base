@@ -1,21 +1,211 @@
 {
+  /**
+   * Configuración del compilador TypeScript para el proyecto NestJS
+   * 
+   * Este archivo define las reglas y configuraciones para:
+   * - Compilación del código TypeScript
+   * - Generación de archivos de declaración
+   * - Manejo de módulos
+   * - Configuración de rutas
+   * - Verificación de tipos estricta
+   * - Generación de source maps
+   * 
+   * Documentación completa: https://www.typescriptlang.org/tsconfig
+   */
   "compilerOptions": {
+    /**
+     * Sistema de módulos a utilizar
+     * - commonjs: Compatible con Node.js
+     * - Permite usar require/module.exports
+     */
     "module": "commonjs",
+    /**
+     * Generar archivos de declaración (.d.ts)
+     * - Necesario para publicar librerías
+     */
     "declaration": true,
+    
+    /**
+     * Eliminar comentarios del código generado
+     * - Reduce el tamaño del código compilado
+     */
     "removeComments": true,
+    
+    /**
+     * Emitir metadatos para decoradores
+     * - Requerido para NestJS y TypeORM
+     */
     "emitDecoratorMetadata": true,
+    
+    /**
+     * Habilitar decoradores experimentales
+     * - Requerido para NestJS
+     */
     "experimentalDecorators": true,
+    
+    /**
+     * Permitir importaciones sintéticas por defecto
+     * - Facilita la importación de módulos CommonJS
+     */
     "allowSyntheticDefaultImports": true,
+    
+    /**
+     * Versión de ECMAScript objetivo
+     * - ES2021: Últimas características de JavaScript
+     */
     "target": "ES2021",
+    
+    /**
+     * Generar source maps
+     * - Permite depurar código TypeScript
+     */
     "sourceMap": true,
+    
+    /**
+     * Directorio de salida para archivos compilados
+     */
     "outDir": "./dist",
+    
+    /**
+     * Ruta base para resolución de módulos
+     */
     "baseUrl": "./",
+    
+    /**
+     * Compilación incremental
+     * - Mejora el rendimiento de compilación
+     */
     "incremental": true,
+    
+    /**
+     * Omitir verificación de tipos en archivos de definición
+     * - Mejora el rendimiento
+     */
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    
+    /**
+     * Habilitar todas las verificaciones de tipo estrictas
+     */
+    "strict": true,
+    
+    /**
+     * Verificación estricta de valores nulos
+     */
+    "strictNullChecks": true,
+    
+    /**
+     * Verificación estricta de tipos de funciones
+     */
+    "strictFunctionTypes": true,
+    
+    /**
+     * Verificación estricta de bind/call/apply
+     */
+    "strictBindCallApply": true,
+    
+    /**
+     * Deshabilitar verificación estricta de inicialización de propiedades
+     * - Útil para inyección de dependencias
+     */
+    "strictPropertyInitialization": false,
+    
+    /**
+     * Error al inferir tipo 'any'
+     */
+    "noImplicitAny": true,
+    
+    /**
+     * Error al inferir tipo 'this'
+     */
+    "noImplicitThis": true,
+    
+    /**
+     * Error en variables locales no utilizadas
+     */
+    "noUnusedLocals": true,
+    
+    /**
+     * Error en parámetros no utilizados
+     */
+    "noUnusedParameters": true,
+    
+    /**
+     * Error en funciones sin return explícito
+     */
+    "noImplicitReturns": true,
+    
+    /**
+     * Error en casos no cubiertos en switch
+     */
+    "noFallthroughCasesInSwitch": true,
+    
+    /**
+     * Compatibilidad con módulos ES
+     */
+    "esModuleInterop": true,
+    
+    /**
+     * Estrategia de resolución de módulos
+     * - node: Compatible con Node.js
+     */
+    "moduleResolution": "node",
+    /**
+     * Mapeo de rutas para imports
+     * - Permite imports absolutos
+     */
+    "paths": {
+      "@app/*": ["src/*"],
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/config/*"],
+      "@core/*": ["src/core/*"],
+      "@shared/*": ["src/shared/*"],
+      "@utils/*": ["src/utils/*"],
+      "@test/*": ["test/*"]
+    },
+    
+    /**
+     * Tipos globales incluidos
+     * - node: Tipos para Node.js
+     * - jest: Tipos para pruebas
+     */
+    "types": ["jest", "node"],
+    
+    /**
+     * Librerías estándar incluidas
+     * - ES2021: Características de JavaScript
+     * - DOM: Tipos para navegador
+     */
+    "lib": ["ES2021", "DOM"],
+    
+    /**
+     * Permitir importar archivos JSON como módulos
+     */
+    "resolveJsonModule": true,
+    
+    /**
+     * Forzar consistencia en mayúsculas/minúsculas en nombres de archivo
+     */
+    "forceConsistentCasingInFileNames": true,
+    
+    /**
+     * Importar helpers de tslib
+     * - Reduce el tamaño del código generado
+     */
+    "importHelpers": true,
+    
+    /**
+     * Formateo legible del código generado
+     */
+    "pretty": true
+  },
+  
+  /**
+   * Archivos a incluir en la compilación
+   */
+  "include": ["src/**/*", "test/**/*"],
+  
+  /**
+   * Archivos a excluir de la compilación
+   */
+  "exclude": ["node_modules", "dist"]
 }

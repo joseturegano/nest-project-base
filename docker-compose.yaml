@@ -1,10 +1,173 @@
+name: nest-project-base
+
 services:
-  db:
-    image: mongo:8.0.3
-    restart: always
+  app:
+    build:
+      context: .
+      target: runner
     ports:
-      - 27017:27017
+      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:9090:9090"  # Puerto para métricas
     environment:
-      MONGODB_DATABASE: project-base
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+      - ENABLE_REQUEST_LOGGING=true
+      - ENABLE_RESPONSE_LOGGING=true
+      - ENABLE_ERROR_LOGGING=true
+      - OTLP_ENDPOINT=http://collector:4318/v1/traces
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=${MONGODB_DB_NAME:-nestjs}
+      - MONGODB_USER=${MONGODB_USER:-admin}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-password}
+      - MONGODB_AUTH_SOURCE=admin
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+      - HEALTH_MEMORY_HEAP_THRESHOLD=500
+      - HEALTH_DISK_THRESHOLD_PERCENT=0.9
+      - HEALTH_MONGODB_TIMEOUT=5000
     volumes:
-      - ./mongo:/data/db
+      - ./logs:/app/logs
+      - ./tmp:/app/tmp
+      - .:/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      collector:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - backend
+      - observability
+
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "0.0.0.0:27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-password}
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - backend
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "0.0.0.0:4317:4317"  # OTLP gRPC
+      - "0.0.0.0:4318:4318"  # OTLP HTTP
+      - "0.0.0.0:8888:8888"  # Prometheus metrics
+      - "0.0.0.0:13133:13133"  # Health check
+      - "0.0.0.0:55679:55679"  # zPages
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:13133"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - observability
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "0.0.0.0:9091:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - observability
+
+  grafana:
+    image: grafana/grafana:10.3.3
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "0.0.0.0:3001:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - observability
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge  # Red para servicios backend
+  observability:
+    driver: bridge

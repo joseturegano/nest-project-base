@@ -1,3 +1,4 @@
+// Configuración básica de ESLint para TypeScript
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
