@@ -13,10 +13,6 @@ import { Logger } from '@nestjs/common';
 describe('HealthController', () => {
   let controller: HealthController;
   let healthCheckService: jest.Mocked<HealthCheckService>;
-  let httpHealthIndicator: jest.Mocked<HttpHealthIndicator>;
-  let mongooseHealthIndicator: jest.Mocked<MongooseHealthIndicator>;
-  let memoryHealthIndicator: jest.Mocked<MemoryHealthIndicator>;
-  let diskHealthIndicator: jest.Mocked<DiskHealthIndicator>;
   let configService: jest.Mocked<ConfigService>;
   let loggerSpy: jest.SpyInstance;
 
@@ -60,20 +56,22 @@ describe('HealthController', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn().mockImplementation((key: string, defaultValue: any) => {
-              switch (key) {
-                case 'health.memoryHeapThreshold':
-                  return 500 * 1024 * 1024;
-                case 'health.diskThresholdPercent':
-                  return 0.9;
-                case 'health.mongodbTimeout':
-                  return 5000;
-                case 'PORT':
-                  return 3000;
-                default:
-                  return defaultValue;
-              }
-            }),
+            get: jest
+              .fn()
+              .mockImplementation((key: string, defaultValue: any) => {
+                switch (key) {
+                  case 'health.memoryHeapThreshold':
+                    return 500 * 1024 * 1024;
+                  case 'health.diskThresholdPercent':
+                    return 0.9;
+                  case 'health.mongodbTimeout':
+                    return 5000;
+                  case 'PORT':
+                    return 3000;
+                  default:
+                    return defaultValue;
+                }
+              }),
           },
         },
       ],
@@ -81,10 +79,6 @@ describe('HealthController', () => {
 
     controller = module.get<HealthController>(HealthController);
     healthCheckService = module.get(HealthCheckService);
-    httpHealthIndicator = module.get(HttpHealthIndicator);
-    mongooseHealthIndicator = module.get(MongooseHealthIndicator);
-    memoryHealthIndicator = module.get(MemoryHealthIndicator);
-    diskHealthIndicator = module.get(DiskHealthIndicator);
     configService = module.get(ConfigService);
   });
 
@@ -93,9 +87,9 @@ describe('HealthController', () => {
       expect(controller).toBeDefined();
       expect(configService.get).toHaveBeenCalledTimes(4);
       expect(loggerSpy).toHaveBeenCalledWith(
-        'Health check configured with: Memory threshold: 500MB Disk threshold: 90% MongoDB timeout: 5000ms'
+        'Health check configured with: Memory threshold: 500MB Disk threshold: 90% MongoDB timeout: 5000ms',
       );
-      expect(loggerSpy).toHaveBeenCalledTimes(2);
+      expect(loggerSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -107,8 +101,8 @@ describe('HealthController', () => {
           mongodb: { status: 'up' as const },
           memory_heap: { status: 'up' as const },
           self: { status: 'up' as const },
-          storage: { status: 'up' as const }
-        }
+          storage: { status: 'up' as const },
+        },
       };
       healthCheckService.check.mockResolvedValue(mockResult);
 
@@ -124,7 +118,9 @@ describe('HealthController', () => {
     });
 
     it('should handle health check errors', async () => {
-      healthCheckService.check.mockRejectedValue(new Error('Health check failed'));
+      healthCheckService.check.mockRejectedValue(
+        new Error('Health check failed'),
+      );
 
       await expect(controller.check()).rejects.toThrow('Health check failed');
     });
@@ -135,8 +131,8 @@ describe('HealthController', () => {
       const mockResult = {
         status: 'ok' as const,
         details: {
-          mongodb: { status: 'up' as const }
-        }
+          mongodb: { status: 'up' as const },
+        },
       };
       healthCheckService.check.mockResolvedValue(mockResult);
 
@@ -156,8 +152,8 @@ describe('HealthController', () => {
         details: {
           mongodb: { status: 'up' as const },
           memory_heap: { status: 'up' as const },
-          storage: { status: 'up' as const }
-        }
+          storage: { status: 'up' as const },
+        },
       };
       healthCheckService.check.mockResolvedValue(mockResult);
 

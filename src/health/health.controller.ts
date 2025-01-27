@@ -27,10 +27,27 @@ export class HealthController {
     private disk: DiskHealthIndicator,
     private configService: ConfigService,
   ) {
-    this.memoryThreshold = this.configService.get<number>('health.memoryHeapThreshold', 500 * 1024 * 1024);
-    this.diskThreshold = this.configService.get<number>('health.diskThresholdPercent', 0.9);
-    this.mongoTimeout = this.configService.get<number>('health.mongodbTimeout', 5000);
+    this.memoryThreshold = this.configService.get<number>(
+      'health.memoryHeapThreshold',
+      500 * 1024 * 1024,
+    );
+    this.diskThreshold = this.configService.get<number>(
+      'health.diskThresholdPercent',
+      0.9,
+    );
+    this.mongoTimeout = this.configService.get<number>(
+      'health.mongodbTimeout',
+      5000,
+    );
     this.port = this.configService.get<number>('PORT', 3000);
+
+    this.logger.log(
+      `Health check configured with: Memory threshold: ${Math.floor(
+        this.memoryThreshold / (1024 * 1024),
+      )}MB Disk threshold: ${Math.floor(
+        this.diskThreshold * 100,
+      )}% MongoDB timeout: ${this.mongoTimeout}ms`,
+    );
   }
 
   @Get()
@@ -40,8 +57,16 @@ export class HealthController {
     return this.health.check([
       () => this.mongoose.pingCheck('mongodb', { timeout: this.mongoTimeout }),
       () => this.memory.checkHeap('memory_heap', this.memoryThreshold),
-      () => this.http.pingCheck('self', `http://localhost:${this.port}/api/health/liveness`),
-      () => this.disk.checkStorage('storage', { path: '/', thresholdPercent: this.diskThreshold })
+      () =>
+        this.http.pingCheck(
+          'self',
+          `http://localhost:${this.port}/api/health/liveness`,
+        ),
+      () =>
+        this.disk.checkStorage('storage', {
+          path: '/',
+          thresholdPercent: this.diskThreshold,
+        }),
     ]);
   }
 
@@ -50,18 +75,24 @@ export class HealthController {
   @ApiOperation({ summary: 'Verificar si la aplicación está viva' })
   checkLiveness() {
     return this.health.check([
-      () => this.mongoose.pingCheck('mongodb', { timeout: this.mongoTimeout })
+      () => this.mongoose.pingCheck('mongodb', { timeout: this.mongoTimeout }),
     ]);
   }
 
   @Get('readiness')
   @HealthCheck()
-  @ApiOperation({ summary: 'Verificar si la aplicación está lista para recibir tráfico' })
+  @ApiOperation({
+    summary: 'Verificar si la aplicación está lista para recibir tráfico',
+  })
   checkReadiness() {
     return this.health.check([
       () => this.mongoose.pingCheck('mongodb', { timeout: this.mongoTimeout }),
       () => this.memory.checkHeap('memory_heap', this.memoryThreshold),
-      () => this.disk.checkStorage('storage', { path: '/', thresholdPercent: this.diskThreshold })
+      () =>
+        this.disk.checkStorage('storage', {
+          path: '/',
+          thresholdPercent: this.diskThreshold,
+        }),
     ]);
   }
 }

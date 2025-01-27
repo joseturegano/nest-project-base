@@ -17,11 +17,18 @@ export class DatabaseHelper {
   }
 
   static async clearDatabase(connection: Connection): Promise<void> {
-    if (connection.db) {
+    try {
+      if (!connection || !connection.db) {
+        console.warn('No hay conexión a la base de datos disponible');
+        return;
+      }
       const collections = await connection.db.collections();
       for (const collection of collections) {
         await collection.deleteMany({});
       }
+    } catch (error) {
+      console.error('Error al limpiar la base de datos:', error);
+      throw error;
     }
   }
 

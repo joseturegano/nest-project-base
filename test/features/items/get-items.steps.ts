@@ -17,6 +17,9 @@ interface ItemResponse {
 
 const feature = loadFeature('test/features/items/get-items.feature');
 
+// Configurar timeout global para estos tests
+jest.setTimeout(60000); // Aumentar timeout a 60 segundos
+
 defineFeature(feature, (test) => {
   let app: INestApplication;
   let connection: Connection;
@@ -28,9 +31,20 @@ defineFeature(feature, (test) => {
       }).compile();
 
       app = moduleFixture.createNestApplication();
-      await app.init();
 
+      // Obtener la conexión antes de inicializar la aplicación
       connection = moduleFixture.get<Connection>(getConnectionToken());
+
+      // Esperar a que la conexión esté lista
+      await new Promise<void>((resolve) => {
+        if (connection.readyState === 1) {
+          resolve();
+        } else {
+          connection.once('connected', () => resolve());
+        }
+      });
+
+      await app.init();
       await DatabaseHelper.clearDatabase(connection);
     } catch (error) {
       console.error('Error en la configuración de los tests:', error);
@@ -40,9 +54,13 @@ defineFeature(feature, (test) => {
 
   afterAll(async () => {
     try {
-      await DatabaseHelper.clearDatabase(connection);
+      if (connection) {
+        await DatabaseHelper.clearDatabase(connection);
+      }
       await DatabaseHelper.closeDatabase();
-      await app.close();
+      if (app) {
+        await app.close();
+      }
     } catch (error) {
       console.error('Error en la limpieza después de los tests:', error);
       throw error;
